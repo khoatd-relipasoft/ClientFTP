@@ -57,13 +57,13 @@
       <br />
     </div>
     <div class="container">
-      <form th:object="${fileUpload}" action="/upload">
+      <form th:object="${FileUpload}" action="/upload" method="POST" enctype="multipart/form-data">
         <br />
-        Path to this folder:
-        <input name="pathToFolder" th:value="${path}"></input>
+        <input name="pathToFolder" th:value="${path}" style="display: none;"></input>
         <br>
-        File to upload: <input name="pathToFile" type="file" />
-        <input class="buttonCus" type="submit" value="Upload" style="margin-left: 50px;"/>
+        File to upload: <input type="file" id="i_file" name="fileName" />
+        <input type="text" name="pathToFile" id="path" style="display: none;" >
+        <input class="buttonCus" type="submit"   style="margin-left: 50px;"></input>
       </form>
       <br>
       <br>
@@ -110,6 +110,11 @@
     </div>
 
     <script>
+    $('#i_file').change( function(event) {
+      console.log(event.target.value.split('\\').pop());
+      document.getElementById("path").setAttribute("value", event.target.value.split('\\').pop());
+    });
+
       function getPropId(name, type) {
         console.log(name);
         console.log(type);

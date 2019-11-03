@@ -10,4 +10,5 @@ import lombok.NoArgsConstructor;
 public class FileUpload {
     String pathToFile;
     String pathToFolder;
+    String fileName;
 }

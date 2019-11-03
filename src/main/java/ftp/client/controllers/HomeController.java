@@ -2,6 +2,9 @@ package ftp.client.controllers;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -10,6 +13,7 @@ import java.util.List;
 import javax.servlet.http.HttpServletResponse;
 import javax.websocket.server.PathParam;
 
+import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
@@ -21,9 +25,11 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 
 import ftp.client.model.FileFTP;
+import ftp.client.model.FileUpload;
 import ftp.client.model.User;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
 @Controller
 public class HomeController {
@@ -37,9 +43,15 @@ public class HomeController {
     }
 
     @RequestMapping("/upload")
-    public String upload(@PathParam("pathToFile") String pathToFile, @PathParam("pathToFolder") String pathToFolder) {
-        System.out.println(pathToFile);
-        System.out.println(pathToFolder);
+    public String upload(@RequestParam("fileName") MultipartFile file, @RequestParam("pathToFile") String fileName,
+            @RequestParam("pathToFolder") String folder) throws IOException {
+        ftpClient.setFileType(FTP.BINARY_FILE_TYPE, FTP.BINARY_FILE_TYPE);
+        ftpClient.setControlEncoding("UTF-8");
+        ftpClient.setFileTransferMode(FTP.BINARY_FILE_TYPE);
+        System.out.println(fileName);
+        ftpClient.changeWorkingDirectory(folder);
+        InputStream a = file.getInputStream();
+        ftpClient.storeFile(fileName, a);
         return "upload-success";
     }
 
@@ -47,40 +59,27 @@ public class HomeController {
     public void download(@PathParam("path") String path, HttpServletResponse response, @PathParam("name") String name)
             throws IOException {
         System.out.println(path);
+        // ftpClient.setControlEncoding("UTF-8");
+        ftpClient.setAutodetectUTF8(true);
         InputStream inputStream = ftpClient.retrieveFileStream(path);
-        // inputStream.read(b);
-        // InputStream inputStream2 = new BufferedInputStream(new
-        // ByteArrayInputStream(b));
         response.setContentType("application/octet-stream");
         response.setHeader("Content-disposition", "attachment; filename=" + name);
         response.setContentLength(inputStream.available());
         FileCopyUtils.copy(inputStream, response.getOutputStream());
-
-        // return "home";
     }
 
-    @RequestMapping("/home")
+    @PostMapping("/home")
     public String login(@ModelAttribute("user") User user, Model model) throws IOException {
+
         if (connectFTPServer(6000, user.getAddress(), Integer.parseInt(user.getPort()), user.getUsername(),
                 user.getPassword())) {
+            ftpClient.setControlEncoding("UTF-8");
             model.addAttribute("path", "/");
             model.addAttribute("files", listDirectory(ftpClient, "", "/", 0));
             return "home";
         }
 
-        // List<FileFTP> list2 = new ArrayList<>();
-        // list2.add(new FileFTP("testtest", "folder"));
-        // List<FileFTP> list = new ArrayList<>();
-        // list.add(new FileFTP("test 1", list2, "folder"));
-        // list.add(new FileFTP("test2.mp3", "file"));
-        // list.add(new FileFTP("test3.mp3", "file"));
-        // list.add(new FileFTP("test4.mp3", "folder"));
-
-        // model.addAttribute("files", list);
-
         return "index";
-
-        // return "redirect:/";
     }
 
     @RequestMapping("/folder")
