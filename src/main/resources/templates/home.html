@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.js"
+    />
+    <title>Home</title>
+    <style>
+      .buttonCus{
+        background-color: #4CAF50; /* Green */
+        border: none;
+        color: white;
+        padding: 15px 32px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+      }
+      .buttonCus:hover{
+        box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="header">
+      <div class="ui borderless main menu">
+        <div class="ui text container">
+          <div class="header item">
+            <img
+              class="logo"
+              src="https://image.flaticon.com/icons/png/512/1465/1465589.png"
+            />
+            FTPClient
+          </div>
+          <a href="#" class="item">Articles</a>
+          <a href class="item right">
+            Logout
+          </a>
+        </div>
+      </div>
+      <br />
+    </div>
+    <div class="container">
+      <form th:object="${fileUpload}" action="/upload">
+        <br />
+        Path to this folder:
+        <input name="pathToFolder" th:value="${path}"></input>
+        <br>
+        File to upload: <input name="pathToFile" type="file" />
+        <input class="buttonCus" type="submit" value="Upload" style="margin-left: 50px;"/>
+      </form>
+      <br>
+      <br>
+    </div>
+    <div class="container" id="app">
+      <div class="ui link cards">
+        <div class="card" th:each="tempFile : ${files}">
+          <a
+            class="image"
+            th:href="@{/folder(path=${tempFile.path})}"
+            th:if="${tempFile.type == 'folder'}"
+          >
+            <img
+              src="https://image.freepik.com/free-vector/illustration-data-folder-icon_53876-6329.jpg"
+            />
+          </a>
+          <a class="image" th:if="${tempFile.type == 'file'}">
+            <img src="https://img.icons8.com/plasticine/2x/file.png" />
+          </a>
+          <div class="content">
+            <div class="header" th:text="${tempFile.name}"></div>
+            <!-- <div class="meta">
+              <a>Coworker</a>
+            </div>
+            <div class="description">
+              Elyse is a copywriter working in New York.
+            </div> -->
+          </div>
+          <div class="extra content">
+            <a
+              class="right floated"
+              th:href="@{/download(path = ${tempFile.path}, name= ${tempFile.name})}"
+              th:if="${tempFile.type == 'file'}"
+            >
+              Download
+            </a>
+            <span>
+              <i class="user icon"></i>
+              Detail
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function getPropId(name, type) {
+        console.log(name);
+        console.log(type);
+      }
+
+      new Vue({
+        el: "#header",
+        data() {
+          return {
+            messages: "haha"
+          };
+        },
+
+        methods: {
+          upload() {
+            this.$refs.inputt.click();
+          },
+          onFileSelected(event) {
+            let path = event.target.value;
+            console.log(path);
+            this.post_to_url("/upload", { path: path });
+          },
+          post_to_url(path, params, method) {
+            method = method || "post";
+
+            var form = document.createElement("form");
+
+            var submitfunction = form.submit;
+            form.setAttribute("method", method);
+            form.setAttribute("action", path);
+
+            for (var key in params) {
+              var hiddenField = document.createElement("input");
+              hiddenField.setAttribute("type", "hidden");
+              hiddenField.setAttribute("name", key);
+              hiddenField.setAttribute("value", params[key]);
+
+              form.appendChild(hiddenField);
+            }
+
+            document.body.appendChild(form);
+            console.log(form);
+            form.submit();
+          }
+        }
+      });
+    </script>
+  </body>
+</html>
