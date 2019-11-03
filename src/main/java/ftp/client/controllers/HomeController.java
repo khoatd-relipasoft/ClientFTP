@@ -1,12 +1,15 @@
 package ftp.client.controllers;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,6 +20,11 @@ import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
+import org.apache.commons.net.util.Charsets;
+import org.apache.tomcat.util.http.fileupload.FileUtils;
+import org.apache.tomcat.util.http.fileupload.IOUtils;
+import org.omg.CORBA.portable.OutputStream;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.FileCopyUtils;
@@ -34,7 +42,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Controller
 public class HomeController {
 
-    private FTPClient ftpClient;
+    private FTPClient ftpClient = new FTPClient();;
 
     @RequestMapping("/")
     public String root() {
@@ -56,24 +64,29 @@ public class HomeController {
     }
 
     @RequestMapping("/download")
-    public void download(@PathParam("path") String path, HttpServletResponse response, @PathParam("name") String name)
-            throws IOException {
+    public String download(@PathParam("path") String path, HttpServletResponse response, @PathParam("name") String name)
+            throws Exception {
         System.out.println(path);
-        // ftpClient.setControlEncoding("UTF-8");
-        ftpClient.setAutodetectUTF8(true);
-        InputStream inputStream = ftpClient.retrieveFileStream(path);
-        response.setContentType("application/octet-stream");
-        response.setHeader("Content-disposition", "attachment; filename=" + name);
-        response.setContentLength(inputStream.available());
-        FileCopyUtils.copy(inputStream, response.getOutputStream());
+        File downloadFile1 = new File("D:/Downloads/" + name);
+        BufferedOutputStream outputStream1 = new BufferedOutputStream(new FileOutputStream(downloadFile1));
+        boolean success = ftpClient.retrieveFile(path, outputStream1);
+        outputStream1.close();
+        // InputStream inputStream = ftpClient.retrieveFileStream(path);
+        // response.setContentType("application/octet-stream");
+        // response.setHeader("Content-disposition", "attachment; filename=" + name);
+        // response.setContentLength(inputStream.available());
+        // // FileCopyUtils.copy(inputStream, response.getOutputStream());
+        // IOUtils.copy(inputStream, response.getOutputStream());
+        // response.flushBuffer();
+        return "download-success";
     }
 
     @PostMapping("/home")
     public String login(@ModelAttribute("user") User user, Model model) throws IOException {
-
+        ftpClient.setControlEncoding("UTF-8");
         if (connectFTPServer(6000, user.getAddress(), Integer.parseInt(user.getPort()), user.getUsername(),
                 user.getPassword())) {
-            ftpClient.setControlEncoding("UTF-8");
+
             model.addAttribute("path", "/");
             model.addAttribute("files", listDirectory(ftpClient, "", "/", 0));
             return "home";
@@ -92,7 +105,6 @@ public class HomeController {
 
     private boolean connectFTPServer(int FTP_TIMEOUT, String FTP_SERVER_ADDRESS, int FTP_SERVER_PORT_NUMBER,
             String FTP_USERNAME, String FTP_PASSWORD) {
-        ftpClient = new FTPClient();
         try {
             System.out.println("connecting ftp server...");
             // connect to ftp server
