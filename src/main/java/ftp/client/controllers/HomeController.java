@@ -13,6 +13,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.websocket.server.PathParam;
 
@@ -146,6 +147,15 @@ public class HomeController {
     public String logout() throws IOException {
         ftpClient.disconnect();
         return "redirect:/";
+    }
+
+    @RequestMapping("rename")
+    public String rename(@RequestParam("path") String path, @RequestParam("oldname") String oldName,
+            @RequestParam("newname") String newName, HttpServletRequest request) throws IOException {
+        ftpClient.changeWorkingDirectory(path);
+        ftpClient.rename(oldName, newName);
+        String referer = request.getHeader("Referer");
+        return "redirect:" + referer;
     }
 
     private boolean connectFTPServer(int FTP_TIMEOUT, String FTP_SERVER_ADDRESS, int FTP_SERVER_PORT_NUMBER,

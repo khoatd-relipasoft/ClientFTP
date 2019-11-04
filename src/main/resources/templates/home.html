@@ -95,12 +95,10 @@
           </a>
           <div class="content">
             <div class="header" th:text="${tempFile.name}"></div>
-            <!-- <div class="meta">
-              <a>Coworker</a>
+            <div class="meta">
+              <a th:if="${tempFile.type != 'folder'}"
+              th:text="${tempFile.size}"></a>
             </div>
-            <div class="description">
-              Elyse is a copywriter working in New York.
-            </div> -->
           </div>
           <div class="extra content">
             <a th:href="@{/delete(path = ${tempFile.path}, name= ${tempFile.name})}">
@@ -110,10 +108,8 @@
 
             <a
               style="margin-left: 28px;"
-              th:if="${tempFile.type != 'folder'}"
-              th:text="${tempFile.size}"
-            >
-          </a>
+              th:attr="onclick='rename(\''+${path}+'\',\''+${tempFile.name}+'\');'"
+            >Rename</a>
             
             <a
               class="right floated"
@@ -128,6 +124,8 @@
         </div>
       </div>
     </div>
+
+    <a data-toggle="modal" href="#modal3" class="item" style="display: none;" id="renameModal"></a>
 
 
     <!-- Modal create folder-->
@@ -202,6 +200,7 @@
             <div class="row">
               <div class="col-lg-12 mx-auto">
                 <div class="modal-body">
+                  <h2 class="text-uppercase" style="text-align: center;">Upload file</h2>
                   <div class="container">
                     <form th:object="${FileUpload}" action="/upload" method="POST" enctype="multipart/form-data">
                       <br />
@@ -232,8 +231,79 @@
       </div>
     </div>
 
+    <!-- Modal rename file -->
+    <div
+      class="portfolio-modal modal fade"
+      id="modal3"
+      tabindex="-1"
+      role="dialog"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="close-modal" data-dismiss="modal">
+            <div class="lr">
+              <div class="rl"></div>
+            </div>
+          </div>
+          <div class="container">
+            <div class="row">
+              <div class="col-lg-12 mx-auto">
+                <div class="modal-body">
+                    <h2 class="text-uppercase" style="text-align: center;">Rename</h2>
+                  <div class="container">
+                    <input type="text" id="newName" style="margin-left: 100px; width: 200px;">
+                  </div>
+                  <br>
+                  <button
+                    class="btn btn-info"
+                    data-dismiss="modal"
+                    type="button"
+                    style="display: inline; margin-left: 300px;"
+                    onclick="changeName()"
+                  >
+                    <i class="fas fa-times"></i>
+                    Change
+                  </button>
+                  <button
+                    class="btn"
+                    data-dismiss="modal"
+                    type="button"
+                    style="display: inline; background-color: aliceblue;"
+                  >
+                    <i class="fas fa-times"></i>
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>   
+        </div>
+      </div>
+    </div>
+
 
     <script>
+      var path;
+      var name;
+      function rename(s,i){
+        path = s;
+        name = i;
+        placeName = name;
+        if(name.includes(".")) placeName = name.substr(name.length-4);
+        document.getElementById("newName").setAttribute("placeholder",placeName);
+        document.getElementById("renameModal").click();
+      }
+
+      function changeName(){
+        let newName = document.getElementById("newName").value;
+        if(newName.trim() != ""){
+          if(name.includes("."))
+            newName = newName + name.substr(name.length-4);
+          location.href = "/rename?path="+path+"&oldname="+name+"&newname="+newName;
+        }
+      }
+
       function newFolder(){
         var folderName = document.getElementById('folderName').value;
         var folderPath = document.getElementById('folderPath').value;
