@@ -64,7 +64,7 @@ public class HomeController {
     }
 
     @RequestMapping("/download")
-    public String download(@PathParam("path") String path, HttpServletResponse response, @PathParam("name") String name)
+    public void download(@PathParam("path") String path, HttpServletResponse response, @PathParam("name") String name)
             throws Exception {
         System.out.println(path);
         File downloadFile1 = new File("D:/" + name);
@@ -81,7 +81,14 @@ public class HomeController {
 
         IOUtils.copy(myStream, response.getOutputStream());
         response.flushBuffer();
-        return "download-success";
+    }
+
+    @RequestMapping("/newfolder")
+    public String addFolder(@PathParam("name") String name, @PathParam("path") String path) throws IOException {
+        System.out.println(name + " " + path);
+        ftpClient.changeWorkingDirectory(path);
+        ftpClient.makeDirectory(name);
+        return "nf-success";
     }
 
     @PostMapping("/home")

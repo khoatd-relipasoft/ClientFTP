@@ -48,6 +48,7 @@
             />
             FTPClient
           </div>
+          <a data-toggle="modal" href="#modal1" class="item">Add folder</a>
           <a href class="item right">
             Logout
           </a>
@@ -99,66 +100,76 @@
             >
               Download
             </a>
-            <span>
-              <i class="user icon"></i>
-              Detail
-            </span>
+            <a>
+              Delete
+            </a>
           </div>
         </div>
       </div>
     </div>
 
-    <script>
-    $('#i_file').change( function(event) {
-      console.log(event.target.value.split('\\').pop());
-      document.getElementById("path").setAttribute("value", event.target.value.split('\\').pop());
-    });
 
-      function getPropId(name, type) {
-        console.log(name);
-        console.log(type);
+    <!-- Modal -->
+    <div
+      class="portfolio-modal modal fade"
+      id="modal1"
+      tabindex="-1"
+      role="dialog"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="close-modal" data-dismiss="modal">
+            <div class="lr">
+              <div class="rl"></div>
+            </div>
+          </div>
+          <div class="container">
+            <div class="row">
+              <div class="col-lg-8 mx-auto">
+                <div class="modal-body">
+                  <h2 class="text-uppercase">Add folder</h2>
+                  <p class="item-intro text-muted" th:text="${path}" id="pathFolder">
+                  </p>
+                  <input type="text" placeholder="Folder name" id="folderName"></input>
+                  <input type="text" id="folderPath" th:value="${path}" style="display: none;"></input>
+                  <button
+                    class="btn btn-primary"
+                    data-dismiss="modal"
+                    type="button"
+                    onclick="newFolder()"
+                  >
+                    <i class="fas fa-times"></i>
+                    Save
+                  </button>
+                  <br>
+                  <button
+                    class="btn btn-primary"
+                    data-dismiss="modal"
+                    type="button"
+                  >
+                    <i class="fas fa-times"></i>
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>   
+        </div>
+      </div>
+    </div>
+
+
+    <script>
+      function newFolder(){
+        var folderName = document.getElementById('folderName').value;
+        var folderPath = document.getElementById('folderPath').value;
+        location.href = `/newfolder?name=${folderName}&path=${folderPath}`;
       }
 
-      new Vue({
-        el: "#header",
-        data() {
-          return {
-            messages: "haha"
-          };
-        },
-
-        methods: {
-          upload() {
-            this.$refs.inputt.click();
-          },
-          onFileSelected(event) {
-            let path = event.target.value;
-            console.log(path);
-            this.post_to_url("/upload", { path: path });
-          },
-          post_to_url(path, params, method) {
-            method = method || "post";
-
-            var form = document.createElement("form");
-
-            var submitfunction = form.submit;
-            form.setAttribute("method", method);
-            form.setAttribute("action", path);
-
-            for (var key in params) {
-              var hiddenField = document.createElement("input");
-              hiddenField.setAttribute("type", "hidden");
-              hiddenField.setAttribute("name", key);
-              hiddenField.setAttribute("value", params[key]);
-
-              form.appendChild(hiddenField);
-            }
-
-            document.body.appendChild(form);
-            console.log(form);
-            form.submit();
-          }
-        }
+      $('#i_file').change( function(event) {
+        console.log(event.target.value.split('\\').pop());
+        document.getElementById("path").setAttribute("value", event.target.value.split('\\').pop());
       });
     </script>
   </body>
