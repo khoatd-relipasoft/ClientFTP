@@ -67,17 +67,20 @@ public class HomeController {
     public String download(@PathParam("path") String path, HttpServletResponse response, @PathParam("name") String name)
             throws Exception {
         System.out.println(path);
-        File downloadFile1 = new File("D:/Downloads/" + name);
+        File downloadFile1 = new File("D:/" + name);
         BufferedOutputStream outputStream1 = new BufferedOutputStream(new FileOutputStream(downloadFile1));
         boolean success = ftpClient.retrieveFile(path, outputStream1);
         outputStream1.close();
-        // InputStream inputStream = ftpClient.retrieveFileStream(path);
-        // response.setContentType("application/octet-stream");
-        // response.setHeader("Content-disposition", "attachment; filename=" + name);
-        // response.setContentLength(inputStream.available());
-        // // FileCopyUtils.copy(inputStream, response.getOutputStream());
-        // IOUtils.copy(inputStream, response.getOutputStream());
-        // response.flushBuffer();
+        InputStream myStream = new FileInputStream(downloadFile1);
+
+        response.setContentType("application/octet-stream");
+        response.setCharacterEncoding("UTF-8");
+        response.setHeader("Content-disposition", "attachment; filename=" + name);
+        response.addHeader("Cache-Control", "no-store");
+        response.setContentLengthLong(downloadFile1.length());
+
+        IOUtils.copy(myStream, response.getOutputStream());
+        response.flushBuffer();
         return "download-success";
     }
 
