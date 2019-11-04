@@ -41,22 +41,23 @@
     <div id="header">
       <div class="ui borderless main menu">
         <div class="ui text container">
-          <div class="header item">
+          <a class="header item" href="/home">
             <img
               class="logo"
               src="https://image.flaticon.com/icons/png/512/1465/1465589.png"
             />
             FTPClient
-          </div>
+          </a>
           <a data-toggle="modal" href="#modal1" class="item">Add folder</a>
-          <a href class="item right">
+          <a data-toggle="modal" href="#modal2" class="item">Upload file</a>
+          <a href="/logout" class="item right">
             Logout
           </a>
         </div>
       </div>
       <br />
     </div>
-    <div class="container">
+    <!-- <div class="container">
       <form th:object="${FileUpload}" action="/upload" method="POST" enctype="multipart/form-data">
         <br />
         <input name="pathToFolder" th:value="${path}" style="display: none;"></input>
@@ -67,8 +68,8 @@
       </form>
       <br>
       <br>
-    </div>
-    <div class="container" id="app">
+    </div> -->
+    <div class="container" id="app" style="max-width: 1300px;">
       <div class="ui link cards">
         <div class="card" th:each="tempFile : ${files}">
           <a
@@ -80,8 +81,17 @@
               src="https://image.freepik.com/free-vector/illustration-data-folder-icon_53876-6329.jpg"
             />
           </a>
-          <a class="image" th:if="${tempFile.type == 'file'}">
+          <a class="image" th:if="${tempFile.type == 'pdf'}">
             <img src="https://img.icons8.com/plasticine/2x/file.png" />
+          </a>
+          <a class="image" th:if="${tempFile.type == 'file'}">
+            <img src="https://cdn3.iconfinder.com/data/icons/brands-applications/512/File-512.png" />
+          </a>
+          <a class="image" th:if="${tempFile.type == 'rar'}">
+            <img src="https://cdn0.iconfinder.com/data/icons/iconshock-windows7-icons/256/rar.png" />
+          </a>
+          <a class="image" th:if="${tempFile.type == 'exe'}">
+            <img src="http://www.iconarchive.com/download/i83606/pelfusion/flat-file-type/exe.ico" />
           </a>
           <div class="content">
             <div class="header" th:text="${tempFile.name}"></div>
@@ -93,23 +103,34 @@
             </div> -->
           </div>
           <div class="extra content">
+            <a th:href="@{/delete(path = ${tempFile.path}, name= ${tempFile.name})}">
+              <i class="times circle icon"></i>
+              Delete
+            </a>
+
+            <a
+              style="margin-left: 28px;"
+              th:if="${tempFile.type != 'folder'}"
+              th:text="${tempFile.size}"
+            >
+          </a>
+            
             <a
               class="right floated"
               th:href="@{/download(path = ${tempFile.path}, name= ${tempFile.name})}"
-              th:if="${tempFile.type == 'file'}"
+              th:if="${tempFile.type != 'folder'}"
             >
+            <i class="download icon right floated"></i>
               Download
             </a>
-            <a>
-              Delete
-            </a>
+            
           </div>
         </div>
       </div>
     </div>
 
 
-    <!-- Modal -->
+    <!-- Modal create folder-->
     <div
       class="portfolio-modal modal fade"
       id="modal1"
@@ -129,7 +150,7 @@
               <div class="col-lg-8 mx-auto">
                 <div class="modal-body">
                   <h2 class="text-uppercase">Add folder</h2>
-                  <p class="item-intro text-muted" th:text="${path}" id="pathFolder">
+                  Path:<p class="item-intro text-muted" th:text="${path}" id="pathFolder" style="display: inline;">
                   </p>
                   <input type="text" placeholder="Folder name" id="folderName"></input>
                   <input type="text" id="folderPath" th:value="${path}" style="display: none;"></input>
@@ -143,10 +164,62 @@
                     Save
                   </button>
                   <br>
+                  <br>
+                  <br>
                   <button
-                    class="btn btn-primary"
+                    class="btn btn-info"
                     data-dismiss="modal"
                     type="button"
+                    style="margin-left: 30%;"
+                  >
+                    <i class="fas fa-times"></i>
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>   
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal upload file -->
+    <div
+      class="portfolio-modal modal fade"
+      id="modal2"
+      tabindex="-1"
+      role="dialog"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="close-modal" data-dismiss="modal">
+            <div class="lr">
+              <div class="rl"></div>
+            </div>
+          </div>
+          <div class="container">
+            <div class="row">
+              <div class="col-lg-12 mx-auto">
+                <div class="modal-body">
+                  <div class="container">
+                    <form th:object="${FileUpload}" action="/upload" method="POST" enctype="multipart/form-data">
+                      <br />
+                      <input name="pathToFolder" th:value="${path}" style="display: none;"></input>
+                      <br>
+                      File to upload: <input type="file" id="i_file" name="fileName" />
+                      <input type="text" name="pathToFile" id="path" style="display: none;" >
+                      <input class="buttonCus" type="submit"   style="margin-left: 147px; margin-top: 50px;"></input>
+                    </form>
+                    <br>
+                    <br>
+                  </div>
+
+                  <button
+                    class="btn btn-info"
+                    data-dismiss="modal"
+                    type="button"
+                    style="margin-left: 40%;"
                   >
                     <i class="fas fa-times"></i>
                     Close

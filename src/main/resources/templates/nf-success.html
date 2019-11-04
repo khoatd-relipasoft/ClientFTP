@@ -26,27 +26,30 @@
     <div id="header">
       <div class="ui borderless main menu">
         <div class="ui text container">
-          <div class="header item">
+          <a class="header item" href="/home">
             <img
               class="logo"
               src="https://image.flaticon.com/icons/png/512/1465/1465589.png"
             />
             FTPClient
-          </div>
-          <a href="#" class="item">Articles</a>
-          <a href class="item right">
+          </a>
+          <a href="/logout" class="item right">
             Logout
           </a>
         </div>
       </div>
       <br />
-      <br />
     </div>
-    <p>Make a new folder</p>
-    <button onclick="goBack()">Go back</button>
+    <div class="container">
+      <p th:text="${message}" style="text-align: center; font-size: 20px;"></p>
+      <button class="btn-primary" onclick="goBack()" style="margin-left: 46%;">
+        Go back
+      </button>
+    </div>
     <script>
       function goBack() {
-        window.history.back();
+        // window.history.back();
+        window.location = document.referrer;
       }
     </script>
   </body>

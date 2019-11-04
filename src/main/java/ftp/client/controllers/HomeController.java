@@ -33,7 +33,6 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 
 import ftp.client.model.FileFTP;
-import ftp.client.model.FileUpload;
 import ftp.client.model.User;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -46,28 +45,46 @@ public class HomeController {
 
     @RequestMapping("/")
     public String root() {
-        return "index";
+        if (!ftpClient.isConnected())
+            return "index";
+        else
+            return "redirect:/home";
 
     }
 
     @RequestMapping("/upload")
     public String upload(@RequestParam("fileName") MultipartFile file, @RequestParam("pathToFile") String fileName,
-            @RequestParam("pathToFolder") String folder) throws IOException {
+            @RequestParam("pathToFolder") String folder, Model model) throws IOException {
         ftpClient.setFileType(FTP.BINARY_FILE_TYPE, FTP.BINARY_FILE_TYPE);
         ftpClient.setControlEncoding("UTF-8");
         ftpClient.setFileTransferMode(FTP.BINARY_FILE_TYPE);
-        System.out.println(fileName);
         ftpClient.changeWorkingDirectory(folder);
         InputStream a = file.getInputStream();
-        ftpClient.storeFile(fileName, a);
-        return "upload-success";
+        boolean check = ftpClient.storeFile(fileName, a);
+        if (check)
+            model.addAttribute("message", "Upload done: " + fileName + ".");
+        else
+            model.addAttribute("message", "Can not upload this file");
+        return "nf-success";
+    }
+
+    @RequestMapping("/delete")
+    public String delete(@RequestParam("name") String name, @RequestParam("path") String path, Model model)
+            throws IOException {
+        boolean isDeleted = ftpClient.deleteFile(path);
+        if (isDeleted) {
+            model.addAttribute("message", "Deleted " + name + ".");
+
+        } else {
+            model.addAttribute("message", "Can not delete " + name + " because you don't have permission.");
+        }
+        return "nf-success";
     }
 
     @RequestMapping("/download")
     public void download(@PathParam("path") String path, HttpServletResponse response, @PathParam("name") String name)
             throws Exception {
-        System.out.println(path);
-        File downloadFile1 = new File("D:/" + name);
+        File downloadFile1 = new File("D:/Store/" + name);
         BufferedOutputStream outputStream1 = new BufferedOutputStream(new FileOutputStream(downloadFile1));
         boolean success = ftpClient.retrieveFile(path, outputStream1);
         outputStream1.close();
@@ -84,22 +101,33 @@ public class HomeController {
     }
 
     @RequestMapping("/newfolder")
-    public String addFolder(@PathParam("name") String name, @PathParam("path") String path) throws IOException {
-        System.out.println(name + " " + path);
+    public String addFolder(@PathParam("name") String name, @PathParam("path") String path, Model model)
+            throws IOException {
         ftpClient.changeWorkingDirectory(path);
-        ftpClient.makeDirectory(name);
+        boolean check = ftpClient.makeDirectory(name);
+        if (check)
+            model.addAttribute("message", "Add new foler: " + name + " to " + path);
+        else
+            model.addAttribute("message", "Can not create a new folder here.");
         return "nf-success";
     }
 
-    @PostMapping("/home")
+    @RequestMapping("/home")
+    public String home(Model model) throws IOException {
+        if (checkCon() == false)
+            return "redirect:/";
+        model.addAttribute("path", "/");
+        model.addAttribute("files", listDirectory(ftpClient, "", "/", 0));
+        return "home";
+    }
+
+    @PostMapping("/login")
     public String login(@ModelAttribute("user") User user, Model model) throws IOException {
         ftpClient.setControlEncoding("UTF-8");
         if (connectFTPServer(6000, user.getAddress(), Integer.parseInt(user.getPort()), user.getUsername(),
                 user.getPassword())) {
 
-            model.addAttribute("path", "/");
-            model.addAttribute("files", listDirectory(ftpClient, "", "/", 0));
-            return "home";
+            return "redirect:/home";
         }
 
         return "index";
@@ -107,10 +135,17 @@ public class HomeController {
 
     @RequestMapping("/folder")
     public String goFolder(@RequestParam("path") String path, Model model) throws IOException {
-        System.out.println(path);
+        if (checkCon() == false)
+            return "redirect:/";
         model.addAttribute("path", path);
         model.addAttribute("files", listDirectory(ftpClient, path, "", 0));
         return "home";
+    }
+
+    @RequestMapping("/logout")
+    public String logout() throws IOException {
+        ftpClient.disconnect();
+        return "redirect:/";
     }
 
     private boolean connectFTPServer(int FTP_TIMEOUT, String FTP_SERVER_ADDRESS, int FTP_SERVER_PORT_NUMBER,
@@ -155,13 +190,36 @@ public class HomeController {
                 }
                 if (aFile.isDirectory()) {
                     files.add(new FileFTP(currentFileName, "folder", parentDir + "/" + currentFileName));
-                    // System.out.println("[" + currentFileName + "]");
                 } else {
-                    // System.out.println(currentFileName);
-                    files.add(new FileFTP(currentFileName, "file", parentDir + "/" + currentFileName));
+                    String extra = "file";
+                    String last = currentFileName.substring(currentFileName.length() - 3);
+                    if (last.compareTo("rar") == 0) {
+                        extra = "rar";
+                    }
+
+                    else if (last.compareTo("pdf") == 0)
+                        extra = last;
+                    else if (last.compareTo("exe") == 0)
+                        extra = last;
+                    String t = "KB";
+                    long size = aFile.getSize() / 1024;
+                    if (size > 1024) {
+                        size /= 1024;
+                        t = "MB";
+                    }
+
+                    String value = String.valueOf(size) + t;
+
+                    files.add(new FileFTP(currentFileName, extra, parentDir + "/" + currentFileName, value));
                 }
             }
         }
         return files;
+    }
+
+    public boolean checkCon() {
+        if (ftpClient.isConnected())
+            return true;
+        return false;
     }
 }
