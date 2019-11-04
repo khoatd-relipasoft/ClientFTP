@@ -55,29 +55,39 @@ public class HomeController {
 
     @RequestMapping("/upload")
     public String upload(@RequestParam("fileName") MultipartFile file, @RequestParam("pathToFile") String fileName,
-            @RequestParam("pathToFolder") String folder, Model model) throws IOException {
+            @RequestParam("pathToFolder") String folder, Model model, HttpServletRequest request) throws IOException {
         ftpClient.setFileType(FTP.BINARY_FILE_TYPE, FTP.BINARY_FILE_TYPE);
         ftpClient.setControlEncoding("UTF-8");
         ftpClient.setFileTransferMode(FTP.BINARY_FILE_TYPE);
         ftpClient.changeWorkingDirectory(folder);
         InputStream a = file.getInputStream();
         boolean check = ftpClient.storeFile(fileName, a);
-        if (check)
-            model.addAttribute("message", "Upload done: " + fileName + ".");
-        else
-            model.addAttribute("message", "Can not upload this file");
+        if (check) {
+            String referer = request.getHeader("Referer");
+            return "redirect:" + referer;
+        } else
+            model.addAttribute("message", ftpClient.getReplyString());
         return "nf-success";
     }
 
     @RequestMapping("/delete")
-    public String delete(@RequestParam("name") String name, @RequestParam("path") String path, Model model)
-            throws IOException {
-        boolean isDeleted = ftpClient.deleteFile(path);
+    public String delete(@RequestParam("name") String name, @RequestParam("path") String path, Model model,
+            HttpServletRequest request) throws IOException {
+        boolean isDeleted;
+        System.out.println(name);
+        if (!name.contains(".")) {
+            isDeleted = ftpClient.removeDirectory(path);
+        } else {
+            isDeleted = ftpClient.deleteFile(path);
+        }
+        String mess = ftpClient.getReplyString();
         if (isDeleted) {
-            model.addAttribute("message", "Deleted " + name + ".");
+            String referer = request.getHeader("Referer");
+            return "redirect:" + referer;
 
         } else {
-            model.addAttribute("message", "Can not delete " + name + " because you don't have permission.");
+
+            model.addAttribute("message", mess);
         }
         return "nf-success";
     }
@@ -102,14 +112,15 @@ public class HomeController {
     }
 
     @RequestMapping("/newfolder")
-    public String addFolder(@PathParam("name") String name, @PathParam("path") String path, Model model)
-            throws IOException {
+    public String addFolder(@PathParam("name") String name, @PathParam("path") String path, Model model,
+            HttpServletRequest request) throws IOException {
         ftpClient.changeWorkingDirectory(path);
         boolean check = ftpClient.makeDirectory(name);
-        if (check)
-            model.addAttribute("message", "Add new foler: " + name + " to " + path);
-        else
-            model.addAttribute("message", "Can not create a new folder here.");
+        if (check) {
+            String referer = request.getHeader("Referer");
+            return "redirect:" + referer;
+        } else
+            model.addAttribute("message", ftpClient.getReplyString());
         return "nf-success";
     }
 
@@ -151,9 +162,13 @@ public class HomeController {
 
     @RequestMapping("rename")
     public String rename(@RequestParam("path") String path, @RequestParam("oldname") String oldName,
-            @RequestParam("newname") String newName, HttpServletRequest request) throws IOException {
+            @RequestParam("newname") String newName, HttpServletRequest request, Model model) throws IOException {
         ftpClient.changeWorkingDirectory(path);
-        ftpClient.rename(oldName, newName);
+        boolean check = ftpClient.rename(oldName, newName);
+        if (check == false) {
+            model.addAttribute("message", ftpClient.getReplyString());
+            return "nf-success";
+        }
         String referer = request.getHeader("Referer");
         return "redirect:" + referer;
     }

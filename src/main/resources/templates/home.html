@@ -57,18 +57,6 @@
       </div>
       <br />
     </div>
-    <!-- <div class="container">
-      <form th:object="${FileUpload}" action="/upload" method="POST" enctype="multipart/form-data">
-        <br />
-        <input name="pathToFolder" th:value="${path}" style="display: none;"></input>
-        <br>
-        File to upload: <input type="file" id="i_file" name="fileName" />
-        <input type="text" name="pathToFile" id="path" style="display: none;" >
-        <input class="buttonCus" type="submit"   style="margin-left: 50px;"></input>
-      </form>
-      <br>
-      <br>
-    </div> -->
     <div class="container" id="app" style="max-width: 1300px;">
       <div class="ui link cards">
         <div class="card" th:each="tempFile : ${files}">
@@ -290,8 +278,8 @@
         path = s;
         name = i;
         placeName = name;
-        if(name.includes(".")) placeName = name.substr(name.length-4);
-        document.getElementById("newName").setAttribute("placeholder",placeName);
+        if(name.includes(".")) placeName = name.substr(0,name.length-4);
+        document.getElementById("newName").setAttribute("value",placeName);
         document.getElementById("renameModal").click();
       }
 
